@@ -63,12 +63,15 @@ function AuthShowcase() {
     undefined, // no input
     { enabled: sessionData?.user !== undefined },
   );
+  const tasks = api.task.getAll.useQuery({ text: "Task 1" });
 
   return (
     <div className="flex flex-col items-center justify-center gap-4">
       <p className="text-center text-2xl text-white">
         {sessionData && <span>Logged in as {sessionData.user?.name}</span>}
         {secretMessage && <span> - {secretMessage}</span>}
+        <br />
+        {tasks.data?.tasks}
       </p>
       <button
         className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
@@ -77,11 +80,11 @@ function AuthShowcase() {
         {sessionData ? "Sign out" : "Sign in"}
       </button>
 
-      <a href={authGoogle("")}>
+      {/* <a href={authGoogle("")}>
         <button className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20">
           Google
         </button>
-      </a>
+      </a> */}
     </div>
   );
 }

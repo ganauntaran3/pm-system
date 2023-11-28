@@ -1,9 +1,12 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
 export const taskRouter = createTRPCRouter({
-  getAll: publicProcedure.mutation() => {
-    return {
-      task: `Hello Task 1`,
-    }}
-  }),
+  getAll: protectedProcedure
+    .input(z.object({ text: z.string() }))
+    .query(({ input }) => {
+      return {
+        tasks: `Hello ${input.text}`,
+      };
+    }),
+});

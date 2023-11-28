@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-    provider = "mysql"
+    provider = "postgresql"
     // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
     // Further reading:
     // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
@@ -14,11 +14,23 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+enum Role {
+    ADMIN
+    MEMBER
+    VISITOR
+}
+
+enum Status {
+    TODO
+    IN_PROGRESS
+    DONE
+}
+
 model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    id          Int      @id @default(autoincrement())
+    name        String
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
 
     createdBy   User   @relation(fields: [createdById], references: [id])
     createdById String
@@ -62,6 +74,10 @@ model User {
     accounts      Account[]
     sessions      Session[]
     posts         Post[]
+    projects      Project[]
+    assignedTask  Task[]
+    collaborators Collaborator[]
+    comments      Comment[]
 }
 
 model VerificationToken {
@@ -70,4 +86,53 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model Project {
+    id          String      @id @default(cuid())
+    name        String 
+    description String      @db.Text
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+    createdBy   User        @relation(fields: [createdById], references: [id])
+    createdById String
+    tasks       Task[]
+    collaborators Collaborator[]
+}
+
+model Task {
+    id          String  @id @default(cuid())
+    title       String 
+    description String? @db.Text
+    status      Status  @default(TODO)
+    assignee    User?   @relation(fields: [assigneeId], references: [id])
+    assigneeId  String
+
+    project     Project @relation(fields: [projectId], references: [id])
+    projectId   String
+
+    comments    Comment[]
+}
+
+model Collaborator {
+    id          String  @id @default(cuid())
+    user        User    @relation(fields: [userId], references: [id])
+    userId      String  
+
+    project     Project @relation(fields: [projectId], references: [id])
+    projectId   String
+
+    @@index([userId, projectId])
+}
+
+model Comment {
+    id          String      @id @default(cuid())
+    text        String      @db.Text
+    createdAt   DateTime    @default(now())
+    task        Task        @relation(fields: [taskId], references: [id])
+    taskId      String
+
+    user        User        @relation(fields: [userId], references: [id])
+    userId      String 
+
 }
