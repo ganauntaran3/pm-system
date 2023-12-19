@@ -42,10 +42,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { api } from "~/utils/api";
 
 const groups = [
   {
-    label: "Personal Account",
+    label: "My Project",
     teams: [
       {
         label: "Alicia Koch",
@@ -54,7 +55,7 @@ const groups = [
     ],
   },
   {
-    label: "Teams",
+    label: "Shared",
     teams: [
       {
         label: "Acme Inc.",
@@ -68,72 +69,76 @@ const groups = [
   },
 ];
 
-type Team = (typeof groups)[number]["teams"][number];
-
 type PopoverTriggerProps = React.ComponentPropsWithoutRef<
   typeof PopoverTrigger
 >;
 
 type TeamSwitcherProps = PopoverTriggerProps;
 
-export default function TeamSwitcher({ className }: TeamSwitcherProps) {
+export default function ProjectSwitcher({ className }: TeamSwitcherProps) {
   const [open, setOpen] = React.useState(false);
   const [showNewTeamDialog, setShowNewTeamDialog] = React.useState(false);
-  const [selectedTeam, setSelectedTeam] = React.useState<Team>(
-    groups[0]!.teams[0]!,
-  );
+  const [selectedProject, setSelectedProject] = React.useState<string>("");
+
+  const { data, error, isLoading } = api.project.getAllMyProject.useQuery();
+  const participate = api.project.getAllProjectAsCollaborator.useQuery();
+  // const data = [];
+  console.log(data);
 
   return (
     <Dialog open={showNewTeamDialog} onOpenChange={setShowNewTeamDialog}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            aria-label="Select a team"
-            className={cn("w-[200px] justify-between", className)}
-          >
-            <Avatar className="mr-2 h-5 w-5">
-              <AvatarImage
-                src={`https://avatar.vercel.sh/${selectedTeam.value}.png`}
-                alt={selectedTeam.label}
-              />
-              <AvatarFallback>SC</AvatarFallback>
-            </Avatar>
-            {selectedTeam.label}
-            <CaretSortIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
-          </Button>
+          {isLoading ? (
+            ""
+          ) : (
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              aria-label="Select a team"
+              className={cn("w-[200px] justify-between", className)}
+            >
+              <Avatar className="mr-2 h-5 w-5">
+                <AvatarImage src={`https://avatar.vercel.sh/personal.png`} />
+                <AvatarFallback>SC</AvatarFallback>
+              </Avatar>
+              {selectedProject || data[0]?.name}
+              <CaretSortIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          )}
         </PopoverTrigger>
         <PopoverContent className="w-[200px] p-0">
-          <Command>
-            <CommandList>
-              <CommandInput placeholder="Search team..." />
-              <CommandEmpty>No team found.</CommandEmpty>
-              {groups.map((group) => (
-                <CommandGroup key={group.label} heading={group.label}>
-                  {group.teams.map((team) => (
+          {isLoading ? (
+            ""
+          ) : (
+            <Command>
+              <CommandList>
+                <CommandInput placeholder="Search team..." />
+                <CommandEmpty>No team found.</CommandEmpty>
+
+                <CommandGroup key="my-project" heading="My Projects">
+                  {data?.map((project) => (
                     <CommandItem
-                      key={team.value}
+                      key={project.id}
                       onSelect={() => {
-                        setSelectedTeam(team);
+                        setSelectedProject(project.name);
                         setOpen(false);
                       }}
                       className="text-sm"
                     >
                       <Avatar className="mr-2 h-5 w-5">
                         <AvatarImage
-                          src={`https://avatar.vercel.sh/${team.value}.png`}
-                          alt={team.label}
+                          src={`https://avatar.vercel.sh/personal.png`}
                           className="grayscale"
                         />
                         <AvatarFallback>SC</AvatarFallback>
                       </Avatar>
-                      {team.label}
+                      {project.name}
                       <CheckIcon
                         className={cn(
                           "ml-auto h-4 w-4",
-                          selectedTeam.value === team.value
+                          selectedProject === project.name
                             ? "opacity-100"
                             : "opacity-0",
                         )}
@@ -141,41 +146,69 @@ export default function TeamSwitcher({ className }: TeamSwitcherProps) {
                     </CommandItem>
                   ))}
                 </CommandGroup>
-              ))}
-            </CommandList>
-            <CommandSeparator />
-            <CommandList>
-              <CommandGroup>
-                <DialogTrigger asChild>
-                  <CommandItem
-                    onSelect={() => {
-                      setOpen(false);
-                      setShowNewTeamDialog(true);
-                    }}
-                  >
-                    <PlusCircledIcon className="mr-2 h-5 w-5" />
-                    Create Team
-                  </CommandItem>
-                </DialogTrigger>
-              </CommandGroup>
-            </CommandList>
-          </Command>
+
+                <CommandGroup key="other-project" heading="Shared Projects">
+                  {participate.data?.map((project) => (
+                    <CommandItem
+                      key={project.id}
+                      onSelect={() => {
+                        setSelectedProject(project.name);
+                        setOpen(false);
+                      }}
+                      className="text-sm"
+                    >
+                      <Avatar className="mr-2 h-5 w-5">
+                        <AvatarImage
+                          src={`https://avatar.vercel.sh/personal.png`}
+                          className="grayscale"
+                        />
+                        <AvatarFallback>SC</AvatarFallback>
+                      </Avatar>
+                      {project.name}
+                      <CheckIcon
+                        className={cn(
+                          "ml-auto h-4 w-4",
+                          selectedProject === project.name
+                            ? "opacity-100"
+                            : "opacity-0",
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+              <CommandSeparator />
+              <CommandList>
+                <CommandGroup>
+                  <DialogTrigger asChild>
+                    <CommandItem
+                      onSelect={() => {
+                        setOpen(false);
+                        setShowNewTeamDialog(true);
+                      }}
+                    >
+                      <PlusCircledIcon className="mr-2 h-5 w-5" />
+                      Create Project
+                    </CommandItem>
+                  </DialogTrigger>
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          )}
         </PopoverContent>
       </Popover>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create team</DialogTitle>
-          <DialogDescription>
-            Add a new team to manage products and customers.
-          </DialogDescription>
+          <DialogTitle>Create Project</DialogTitle>
+          <DialogDescription>Add a new project to manage.</DialogDescription>
         </DialogHeader>
         <div>
           <div className="space-y-4 py-2 pb-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Team name</Label>
-              <Input id="name" placeholder="Acme Inc." />
+              <Label htmlFor="name">Project name</Label>
+              <Input id="name" placeholder="Enter your project name..." />
             </div>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="plan">Subscription plan</Label>
               <Select>
                 <SelectTrigger>
@@ -196,7 +229,7 @@ export default function TeamSwitcher({ className }: TeamSwitcherProps) {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
           </div>
         </div>
         <DialogFooter>

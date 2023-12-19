@@ -18,6 +18,8 @@ import { Search } from "~/components/common/search";
 import TeamSwitcher from "~/components/dashboard/project-switcher";
 import { UserNav } from "~/components/dashboard/user-nav";
 import { useSession } from "next-auth/react";
+import { useState } from "react";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -25,7 +27,8 @@ export const metadata: Metadata = {
 };
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
+  const [menu, setMenu] = useState();
+
   return (
     <>
       <div className="md:hidden">

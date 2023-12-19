@@ -24,4 +24,24 @@ export const projectRouter = createTRPCRouter({
       where: { createdBy: { id: ctx.session.user.id } },
     });
   }),
+
+  getAllMyProject: protectedProcedure.query(({ ctx }) => {
+    return ctx.db.project.findMany({
+      where: { createdBy: { id: ctx.session.user.id } },
+    });
+  }),
+
+  getAllProjectAsCollaborator: protectedProcedure.query(({ ctx }) => {
+    return ctx.db.project.findMany({
+      where: {
+        users: {
+          some: {
+            user: {
+              id: ctx.session.user.id,
+            },
+          },
+        },
+      },
+    });
+  }),
 });
