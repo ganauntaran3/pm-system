@@ -71,14 +71,14 @@ model User {
     email           String?   @unique
     password        String?     
     emailVerified   DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
-    projects      Project[]
-    assignedTask  Task[]
-    collaborators Collaborator[]
-    comments      Comment[]
+    image           String?
+    accounts        Account[]
+    sessions        Session[]
+    posts           Post[]
+    projects        Project[]
+    assignedTask    Task[]
+    collaborators   Collaborator[]
+    comments        Comment[]
 }
 
 model VerificationToken {
